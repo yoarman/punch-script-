@@ -92,7 +92,7 @@ end
 
 UserInputService.InputBegan:Connect(function(input, gpe)
     if gpe then return end
-    if input.KeyCode == Enum.KeyCode.F then punch() end
+    if input.KeyCode == Enum.KeyCode.R then punch() end
 end)
 
 -----------------------------
@@ -156,12 +156,11 @@ body.BackgroundTransparency = 1
 body.ClipsDescendants = true
 body.Parent = main
 
--- Slider builder
 local sliderDefs = {
-    {label = "Range",     key = "range",     min = 2,  max = 30,  default = 8},
-    {label = "Cooldown",  key = "cooldown",  min = 0.1,max = 3,   default = 0.6},
-    {label = "Knockback", key = "knockback", min = 10, max = 200, default = 60},
-    {label = "Damage",    key = "damage",    min = 1,  max = 100, default = 15},
+    {label = "Range",     key = "range",     min = 2,   max = 30,  default = 8},
+    {label = "Cooldown",  key = "cooldown",  min = 0.1, max = 3,   default = 0.6},
+    {label = "Knockback", key = "knockback", min = 10,  max = 200, default = 60},
+    {label = "Damage",    key = "damage",    min = 1,   max = 100, default = 15},
 }
 
 for i, def in ipairs(sliderDefs) do
@@ -175,6 +174,7 @@ for i, def in ipairs(sliderDefs) do
     rowLabel.TextSize = 11
     rowLabel.TextXAlignment = Enum.TextXAlignment.Left
     rowLabel.TextColor3 = Color3.fromRGB(130, 135, 160)
+    rowLabel.Text = def.label
     rowLabel.Parent = body
 
     local valLabel = Instance.new("TextLabel")
@@ -207,13 +207,11 @@ for i, def in ipairs(sliderDefs) do
         local pct = (val - def.min) / (def.max - def.min)
         barFill.Size = UDim2.new(pct, 0, 1, 0)
         local display = def.key == "cooldown" and string.format("%.1f", val) or math.floor(val)
-        rowLabel.Text = def.label
         valLabel.Text = tostring(display)
     end
 
     updateSlider(def.default)
 
-    -- Drag logic
     local draggingSlider = false
     barBg.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -235,19 +233,17 @@ for i, def in ipairs(sliderDefs) do
     end)
 end
 
--- Key hint
 local keyHint = Instance.new("TextLabel")
 keyHint.Size = UDim2.new(1, -24, 0, 14)
 keyHint.Position = UDim2.new(0, 12, 0, 174)
 keyHint.BackgroundTransparency = 1
-keyHint.Text = "Press [F] to punch"
+keyHint.Text = "Press [R] to punch"
 keyHint.TextColor3 = Color3.fromRGB(80, 85, 110)
 keyHint.Font = Enum.Font.Gotham
 keyHint.TextSize = 11
 keyHint.TextXAlignment = Enum.TextXAlignment.Left
 keyHint.Parent = body
 
--- Minimize
 local minimized = false
 minBtn.MouseButton1Click:Connect(function()
     minimized = not minimized
@@ -263,7 +259,6 @@ minBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Dragging
 local dragging, dragStart, startPos
 header.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -280,4 +275,4 @@ UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
 end)
 
-print("Punch Pro loaded! Press F to punch.")
+print("Punch Pro loaded! Press R to punch.")
