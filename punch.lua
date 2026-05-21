@@ -74,20 +74,35 @@ local function punch()
     local now = tick()
     if now - lastPunch < settings.cooldown then return end
     lastPunch = now
+
     local target = getTarget()
-    if not target then return end
+    if not target then
+        -- visual feedback even if no target
+        return
+    end
+
     local targetHRP = target:FindFirstChild("HumanoidRootPart")
     local targetHum = target:FindFirstChildOfClass("Humanoid")
-    if not targetHRP or not targetHum or targetHum.Health <= 0 then return end
+    if not targetHRP or not targetHum then return end
+
+    -- Knockback via BodyVelocity on their HRP
     local knockDir = (targetHRP.Position - hrp.Position).Unit
     local bv = Instance.new("BodyVelocity")
-    bv.Velocity = (knockDir + Vector3.new(0, 0.5, 0)) * settings.knockback
-    bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
-    bv.P = 1e5
+    bv.Velocity = (knockDir + Vector3.new(0, 0.6, 0)) * settings.knockback
+    bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+    bv.P = math.huge
     bv.Parent = targetHRP
-    game:GetService("Debris"):AddItem(bv, 0.15)
-    targetHum:TakeDamage(settings.damage)
-    ragdoll(target)
+    game:GetService("Debris"):AddItem(bv, 0.2)
+
+    -- Try damage (works in some games)
+    pcall(function()
+        targetHum:TakeDamage(settings.damage)
+    end)
+
+    -- Ragdoll attempt
+    pcall(function()
+        ragdoll(target)
+    end)
 end
 
 UserInputService.InputBegan:Connect(function(input, gpe)
@@ -95,9 +110,7 @@ UserInputService.InputBegan:Connect(function(input, gpe)
     if input.KeyCode == Enum.KeyCode.R then punch() end
 end)
 
------------------------------
 -- GUI
------------------------------
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "PunchGUI"
 screenGui.ResetOnSpawn = false
@@ -214,12 +227,12 @@ for i, def in ipairs(sliderDefs) do
 
     local draggingSlider = false
     barBg.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             draggingSlider = true
         end
     end)
     UserInputService.InputChanged:Connect(function(input)
-        if draggingSlider and input.UserInputType == Enum.UserInputType.MouseMovement then
+        if draggingSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             local relX = math.clamp(input.Position.X - barBg.AbsolutePosition.X, 0, barBg.AbsoluteSize.X)
             local pct = relX / barBg.AbsoluteSize.X
             local val = def.min + (def.max - def.min) * pct
@@ -227,7 +240,7 @@ for i, def in ipairs(sliderDefs) do
         end
     end)
     UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             draggingSlider = false
         end
     end)
@@ -261,18 +274,20 @@ end)
 
 local dragging, dragStart, startPos
 header.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true dragStart = input.Position startPos = main.Position
     end
 end)
 UserInputService.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
         local d = input.Position - dragStart
         main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X, startPos.Y.Scale, startPos.Y.Offset + d.Y)
     end
 end)
 UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
 end)
 
 print("Punch Pro loaded! Press R to punch.")
